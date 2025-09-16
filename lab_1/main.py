@@ -8,9 +8,23 @@ class Shape3D(ABC):
 
     def __init__(self, name):
         self.name = name
-        self.vertices = np.array([])  # вершины
-        self.edges = []  # ребра
-        self.faces = []  # грани
+        self.vertices = np.array([])  # вершины (координаты)
+        self.edges = []  # ребра (пары индексов вершин)
+        self.faces = []  # грани (группы индексов вершин)
+
+    @abstractmethod
+    def generate_vertices(self, size=1.0):
+        pass
+
+    def apply_transform(self, transformation_matrix):
+        """Применяет матрицу преобразования к вершинам"""
+        self.vertices = np.dot(self.vertices, transformation_matrix.T)  # перемножение матриц
+
+    def get_bounding_box(self):
+        """Возвращает ограничивающий параллелепипед"""
+        if len(self.vertices) == 0:
+            return np.array([[-1, -1, -1], [1, 1, 1]])
+        return np.array([self.vertices.min(axis=0), self.vertices.max(axis=0)])
 
 
 class Rotation3DApp:
