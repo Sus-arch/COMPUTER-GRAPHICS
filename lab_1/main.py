@@ -60,6 +60,16 @@ class Cube(Shape3D):
             [1, 2, 6, 5]   # правая
         ]
 
+class ShapeFactory:
+    """Фабрика для создания фигур"""
+    
+    @staticmethod
+    def create_shape(shape_type, **kwargs):
+        if shape_type == "cube":
+            return Cube(kwargs.get('size', 1.0))
+        else:
+            raise ValueError(f"Неизвестный тип фигуры: {shape_type}")
+
 
 class Rotation3DApp:
     def __init__(self):
