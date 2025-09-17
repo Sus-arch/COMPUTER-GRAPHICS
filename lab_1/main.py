@@ -4,8 +4,10 @@ from mpl_toolkits.mplot3d import Axes3D
 import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from mpl_toolkits.mplot3d import art3d
 import json
 from abc import ABC, abstractmethod
+
 
 class Shape3D(ABC):
     """Абстрактный базовый класс для 3D фигур"""
@@ -29,6 +31,7 @@ class Shape3D(ABC):
         if len(self.vertices) == 0:
             return np.array([[-1, -1, -1], [1, 1, 1]])
         return np.array([self.vertices.min(axis=0), self.vertices.max(axis=0)])
+
 
 class Cube(Shape3D):
     """Куб"""
@@ -63,6 +66,7 @@ class Cube(Shape3D):
             [0, 3, 7, 4],  # левая
             [1, 2, 6, 5]   # правая
         ]
+
 
 class Pyramid(Shape3D):
     """Пирамида (тетраэдр)"""
@@ -351,7 +355,7 @@ class Rotation3DApp:
             info += f"Граней: {len(self.current_shape.faces)}\n"
             info += f"Размер: {bbox[1] - bbox[0]}"
             self.info_text.set(info)
-    
+
     def rotation_matrix_x(self, angle):
         theta = np.radians(angle)
         return np.array([
@@ -510,9 +514,6 @@ class Rotation3DApp:
     def run(self):
         """Запускает приложение"""
         self.root.mainloop()
-
-
-from mpl_toolkits.mplot3d import art3d
 
 
 if __name__ == '__main__':
