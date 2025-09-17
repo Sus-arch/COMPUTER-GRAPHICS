@@ -26,6 +26,40 @@ class Shape3D(ABC):
             return np.array([[-1, -1, -1], [1, 1, 1]])
         return np.array([self.vertices.min(axis=0), self.vertices.max(axis=0)])
 
+class Cube(Shape3D):
+    """Куб"""
+    
+    def __init__(self, size=1.0):
+        super().__init__("Куб")
+        self.generate_vertices(size)
+    
+    def generate_vertices(self, size=1.0):
+        self.vertices = np.array([
+            [-size, -size, -size],  # 0
+            [size, -size, -size],   # 1
+            [size, size, -size],    # 2
+            [-size, size, -size],   # 3
+            [-size, -size, size],   # 4
+            [size, -size, size],    # 5
+            [size, size, size],     # 6
+            [-size, size, size]     # 7
+        ])
+        
+        self.edges = [
+            (0, 1), (1, 2), (2, 3), (3, 0),  # нижняя грань
+            (4, 5), (5, 6), (6, 7), (7, 4),  # верхняя грань
+            (0, 4), (1, 5), (2, 6), (3, 7)   # вертикальные ребра
+        ]
+        
+        self.faces = [
+            [0, 1, 2, 3],  # нижняя
+            [4, 5, 6, 7],  # верхняя
+            [0, 1, 5, 4],  # передняя
+            [2, 3, 7, 6],  # задняя
+            [0, 3, 7, 4],  # левая
+            [1, 2, 6, 5]   # правая
+        ]
+
 
 class Rotation3DApp:
     def __init__(self):
