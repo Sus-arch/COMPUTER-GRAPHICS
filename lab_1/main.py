@@ -258,7 +258,7 @@ class Rotation3DApp:
         
         ttk.Checkbutton(display_frame, text="Показывать ребра", variable=self.show_edges, 
                        command=self.update_display).grid(row=0, column=0, sticky=tk.W, padx=5)
-        ttk.Checkbutton(display_frame, text="Показывать грани", variable=self.show_faces, 
+        ttk.Checkbutton(display_frame, text="Показывать грани", variable=self.show_faces,
                        command=self.update_display).grid(row=1, column=0, sticky=tk.W, padx=5)
         
         ttk.Label(display_frame, text="Прозрачность:").grid(row=2, column=0, sticky=tk.W, padx=5)
@@ -356,52 +356,72 @@ class Rotation3DApp:
             info += f"Размер: {bbox[1] - bbox[0]}"
             self.info_text.set(info)
 
-    def rotation_matrix_x(self, angle):
-        theta = np.radians(angle)
-        return np.array([
+    def rotation_matrix(self, angle_x, angle_y, angle_z):
+        """Единая матрица вращения для всех осей"""
+        rx = np.radians(angle_x)
+        ry = np.radians(angle_y)
+        rz = np.radians(angle_z)
+
+        # Матрицы вращения для каждой оси
+        Rx = np.array([
             [1, 0, 0],
-            [0, np.cos(theta), -np.sin(theta)],
-            [0, np.sin(theta), np.cos(theta)]
+            [0, np.cos(rx), -np.sin(rx)],
+            [0, np.sin(rx), np.cos(rx)]
         ])
-    
-    def rotation_matrix_y(self, angle):
-        theta = np.radians(angle)
-        return np.array([
-            [np.cos(theta), 0, np.sin(theta)],
+
+        Ry = np.array([
+            [np.cos(ry), 0, np.sin(ry)],
             [0, 1, 0],
-            [-np.sin(theta), 0, np.cos(theta)]
+            [-np.sin(ry), 0, np.cos(ry)]
         ])
-    
-    def rotation_matrix_z(self, angle):
-        theta = np.radians(angle)
-        return np.array([
-            [np.cos(theta), -np.sin(theta), 0],
-            [np.sin(theta), np.cos(theta), 0],
+
+        Rz = np.array([
+            [np.cos(rz), -np.sin(rz), 0],
+            [np.sin(rz), np.cos(rz), 0],
             [0, 0, 1]
         ])
-    
+
+        # Комбинированная матрица вращения (порядок: Z -> Y -> X)
+        return Rz @ Ry @ Rx
+
     def rotate_object(self):
-        """Применяет поворот к объекту"""
         if not self.current_shape:
             return None
-        
-        # Восстанавливаем исходные вершины
+
         rotated_vertices = self.original_vertices.copy()
-        
-        # Получаем углы из слайдеров
+
         angle_x = self.slider_x.get()
         angle_y = self.slider_y.get()
         angle_z = self.slider_z.get()
-        
-        # Применяем повороты
-        if angle_x != 0:
-            rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_x(angle_x).T)
-        if angle_y != 0:
-            rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_y(angle_y).T)
-        if angle_z != 0:
-            rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_z(angle_z).T)
-            
+
+        # Применяем единую матрицу вращения
+        R = self.rotation_matrix(angle_x, angle_y, angle_z)
+        rotated_vertices = np.dot(rotated_vertices, R.T)
+
         return rotated_vertices
+    
+    # def rotate_object(self):
+    #     """Применяет поворот к объекту"""
+    #     if not self.current_shape:
+    #         return None
+    #
+    #     # Восстанавливаем исходные вершины
+    #     rotated_vertices = self.original_vertices.copy()
+    #
+    #     # Получаем углы из слайдеров
+    #     angle_x = self.slider_x.get()
+    #     angle_y = self.slider_y.get()
+    #     angle_z = self.slider_z.get()
+    #
+    #     # Применяем повороты
+    #     if angle_x != 0:
+    #         rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_x(angle_x).T)
+    #     if angle_y != 0:
+    #         rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_y(angle_y).T)
+    #     if angle_z != 0:
+    #         rotated_vertices = np.dot(rotated_vertices, self.rotation_matrix_z(angle_z).T)
+    #
+    #     return rotated_vertices
     
     def update_rotation(self, event=None):
         """Обновляет отображение при изменении углов"""
@@ -412,22 +432,25 @@ class Rotation3DApp:
         self.update_plot()
     
     def update_plot(self):
-        """Обновляет 3D график"""
         self.ax.clear()
-        
+
         if not self.current_shape:
             return
-        
-        # Получаем повернутые вершины
+
         rotated_vertices = self.rotate_object()
-        
-        # Рисуем грани
+
+        # ПРАВИЛЬНОЕ ОТОБРАЖЕНИЕ ГРАНЕЙ:
         if self.show_faces.get() and hasattr(self.current_shape, 'faces'):
+            polygons = []
             for face in self.current_shape.faces:
-                points = rotated_vertices[face]
-                poly = plt.Polygon(points[:, :2], alpha=self.face_alpha.get(), color='lightblue')
-                self.ax.add_patch(poly)
-                art3d.pathpatch_2d_to_3d(poly, z=0, zdir='z')
+                polygons.append(rotated_vertices[face])
+
+            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+            faces_collection = Poly3DCollection(polygons,
+                                                alpha=self.face_alpha.get(),
+                                                facecolors='lightblue',
+                                                edgecolors='darkblue')
+            self.ax.add_collection3d(faces_collection)
         
         # Рисуем ребра
         if self.show_edges.get():
