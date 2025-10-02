@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import tkinter as tk
 from tkinter import ttk, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -20,10 +18,8 @@ class BezierSurface:
 
     def bernstein_polynomial(self, i, n, t):
         """Вычисление полинома Бернштейна"""
-        if hasattr(math, 'comb'):
-            binom = math.comb(n, i)
-        else:
-            binom = math.factorial(n) // (math.factorial(i) * math.factorial(n - i))
+        binom = math.comb(n, i)
+
         return binom * (t ** i) * ((1 - t) ** (n - i))
 
     def bezier_surface(self, u, v, control_points):
@@ -180,7 +176,7 @@ class PointEditor:
         # Заполняем таблицу данными
         self.update_table_data()
 
-        # Биндим двойной клик для редактирования
+        # Настраиваем двойной клик для редактирования
         self.tree.bind("<Double-1>", self.on_double_click)
 
     def update_table_data(self):
@@ -243,12 +239,9 @@ class PointEditor:
         def save_changes():
             try:
                 new_value = float(current_value.get())
-                # Обновляем данные (исправляем индекс координаты)
-                coord_index = value_index - 1  # 1->0 (X), 2->1 (Y), 3->2 (Z)
+                coord_index = value_index - 1
                 self.control_points[i][j][coord_index] = new_value
-                # Обновляем таблицу
                 self.update_table_data()
-                # Автоматически применяем изменения
                 self.apply_and_update()
                 edit_window.destroy()
             except ValueError:
@@ -299,9 +292,9 @@ class PointEditor:
                        command=lambda p=points: self.load_example_points(p, example_window)).pack(pady=2)
 
     def create_sphere_example(self):
-        """Пример сферического многогранника (улучшенная сфера)"""
-        points_u = 20  # больше точек по долготе
-        points_v = 20  # больше точек по широте
+        """Пример сферического многогранника"""
+        points_u = 20
+        points_v = 20
         points = np.zeros((points_u, points_v, 3))
         radius = 1.5
 
@@ -318,13 +311,12 @@ class PointEditor:
         return points.tolist()
 
     def create_wave_example(self):
-        """Пример волнистой поверхности (более выразительной)"""
+        """Пример волнистой поверхности"""
         points = np.zeros((4, 4, 3))
         for i in range(4):
             for j in range(4):
-                x = (i - 1.5) * 1.5  # Увеличиваем разброс по X
-                y = (j - 1.5) * 1.5  # Увеличиваем разброс по Y
-                # Более выраженная волна с большей амплитудой
+                x = (i - 1.5) * 1.5
+                y = (j - 1.5) * 1.5
                 z = 1.5 * np.sin(x * 1.2) * np.cos(y * 1.2)
                 points[i, j] = [x, y, z]
         return points.tolist()
@@ -591,13 +583,5 @@ class BezierSurfaceApp:
 
 
 if __name__ == "__main__":
-    print("=== ПОВЕРХНОСТЬ БЕЗЬЕ - РЕДАКТОР МНОГОГРАННИКА ===")
-    print("Инструкция:")
-    print("1. Задайте сетку опорных точек (по умолчанию 4x4)")
-    print("2. Двойной клик по ячейке для редактирования координат")
-    print("3. Изменения применяются автоматически")
-    print("4. Используйте слайдеры для вращения")
-    print("5. Загрузите готовые примеры из меню 'Загрузить пример'")
-    print("\nЗапуск приложения...")
     app = BezierSurfaceApp()
     app.run()
