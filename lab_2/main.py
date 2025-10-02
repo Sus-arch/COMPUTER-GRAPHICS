@@ -73,7 +73,7 @@ class SplineApp:
         # Поворот вокруг X
         ttk.Label(rotation_frame, text="Поворот X (°):").pack(anchor=tk.W)
         self.rotation_x_var = tk.DoubleVar(value=0)
-        rotation_x_scale = ttk.Scale(rotation_frame, from_=0, to=360,
+        rotation_x_scale = ttk.Scale(rotation_frame, from_=-180, to=180,
                                      variable=self.rotation_x_var,
                                      command=self.on_rotation_change)
         rotation_x_scale.pack(fill=tk.X, pady=(0, 5))
@@ -81,7 +81,7 @@ class SplineApp:
         # Поворот вокруг Y
         ttk.Label(rotation_frame, text="Поворот Y (°):").pack(anchor=tk.W)
         self.rotation_y_var = tk.DoubleVar(value=0)
-        rotation_y_scale = ttk.Scale(rotation_frame, from_=0, to=360,
+        rotation_y_scale = ttk.Scale(rotation_frame, from_=-180, to=180,
                                      variable=self.rotation_y_var,
                                      command=self.on_rotation_change)
         rotation_y_scale.pack(fill=tk.X, pady=(0, 5))
@@ -189,7 +189,7 @@ class SplineApp:
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')
-        self.ax.set_title('Кубический сплайн по пространственным точкам')
+        self.ax.set_title(f'Кубический сплайн (Поворот X: {self.rotation_x:.1f}°, Y: {self.rotation_y:.1f}°)')
         self.ax.legend()
 
         # Автоматическое масштабирование
@@ -198,6 +198,9 @@ class SplineApp:
         self.canvas.draw()
 
     def apply_rotation(self, points):
+        # Вычисляем центр объекта для вращения вокруг центра
+        center = np.mean(points, axis=0)
+
         # Преобразуем углы в радианы
         theta_x = np.radians(self.rotation_x)
         theta_y = np.radians(self.rotation_y)
@@ -216,8 +219,13 @@ class SplineApp:
             [-np.sin(theta_y), 0, np.cos(theta_y)]
         ])
 
-        # Применяем повороты
-        rotated = points @ Rx.T @ Ry.T
+        # Комбинированная матрица поворота
+        R = Ry @ Rx
+
+        # Поворачиваем точки относительно центра
+        points_centered = points - center
+        rotated_centered = points_centered @ R.T
+        rotated = rotated_centered + center
 
         return rotated
 
